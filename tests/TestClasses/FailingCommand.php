@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 class FailingCommand extends Command
 {
-    /** @var bool  */
+    /** @var bool */
     public static $executed = false;
 
     public $signature = 'failing-command';

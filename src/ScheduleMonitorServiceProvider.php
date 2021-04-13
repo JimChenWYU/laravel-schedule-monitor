@@ -51,7 +51,7 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
         $this->commands([
             CleanLogCommand::class,
             ListCommand::class,
-            SyncCommand::class
+            SyncCommand::class,
         ]);
 
         return $this;

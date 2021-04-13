@@ -8,7 +8,7 @@ use Orchestra\Testbench\Console\Kernel;
 
 class TestKernel extends Kernel
 {
-    /** @var array  */
+    /** @var array */
     protected static $registeredScheduleCommands = [];
 
     public function commands()
