@@ -19,7 +19,9 @@ class ScheduledTaskFactory
             CommandTask::class,
             ShellTask::class,
         ])
-            ->first(fn (string $taskClass) => $taskClass::canHandleEvent($event));
+            ->first(function (string $taskClass) use ($event) {
+                return $taskClass::canHandleEvent($event);
+            });
 
         return new $taskClass($event);
     }

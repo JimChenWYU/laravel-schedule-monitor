@@ -10,8 +10,6 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-use OhDear\PhpSdk\Resources\CronCheck;
-use Spatie\ScheduleMonitor\Jobs\PingOhDearJob;
 use Spatie\ScheduleMonitor\Support\ScheduledTasks\ScheduledTaskFactory;
 
 class MonitoredScheduledTask extends Model
@@ -19,7 +17,6 @@ class MonitoredScheduledTask extends Model
     public $guarded = [];
 
     protected $casts = [
-        'registered_on_oh_dear_at' => 'datetime',
         'last_pinged_at' => 'datetime',
         'last_started_at' => 'datetime',
         'last_finished_at' => 'datetime',
@@ -47,20 +44,6 @@ class MonitoredScheduledTask extends Model
         }
 
         return MonitoredScheduledTask::findByName($task->name());
-    }
-
-    public static function findForCronCheck(CronCheck $cronCheck): ?self
-    {
-        return MonitoredScheduledTask::findByName($cronCheck->name);
-    }
-
-    public function markAsRegisteredOnOhDear(): self
-    {
-        if (is_null($this->registered_on_oh_dear_at)) {
-            $this->update(['registered_on_oh_dear_at' => now()]);
-        }
-
-        return $this;
     }
 
     public function markAsStarting(ScheduledTaskStarting $event): self
@@ -98,8 +81,6 @@ class MonitoredScheduledTask extends Model
 
         $this->update(['last_finished_at' => now()]);
 
-        $this->pingOhDear($logItem);
-
         return $this;
     }
 
@@ -121,10 +102,12 @@ class MonitoredScheduledTask extends Model
     {
         $logItem = $this->createLogItem(MonitoredScheduledTaskLogItem::TYPE_FAILED);
 
-        if ($event instanceof ScheduledTaskFailed) {
-            $logItem->updateMeta([
-                'failure_message' => Str::limit(optional($event->exception)->getMessage(), 255),
-            ]);
+        if (class_exists('Illuminate\Console\Events\ScheduledTaskFailed')) {
+            if ($event instanceof ScheduledTaskFailed) {
+                $logItem->updateMeta([
+                    'failure_message' => Str::limit(optional($event->exception)->getMessage(), 255),
+                ]);
+            }
         }
 
         if ($event instanceof ScheduledTaskFinished) {
@@ -137,8 +120,6 @@ class MonitoredScheduledTask extends Model
 
         $this->update(['last_failed_at' => now()]);
 
-        $this->pingOhDear($logItem);
-
         return $this;
     }
 
@@ -147,24 +128,6 @@ class MonitoredScheduledTask extends Model
         $this->createLogItem(MonitoredScheduledTaskLogItem::TYPE_SKIPPED);
 
         $this->update(['last_skipped_at' => now()]);
-
-        return $this;
-    }
-
-    protected function pingOhDear(MonitoredScheduledTaskLogItem $logItem): self
-    {
-        if (empty($this->ping_url)) {
-            return $this;
-        }
-
-        if (! in_array($logItem->type, [
-            MonitoredScheduledTaskLogItem::TYPE_FAILED,
-            MonitoredScheduledTaskLogItem::TYPE_FINISHED,
-        ], true)) {
-            return $this;
-        }
-
-        dispatch(new PingOhDearJob($logItem));
 
         return $this;
     }

@@ -11,7 +11,9 @@ class ReadyForMonitoringTasksTable extends ScheduledTasksTable
     {
         $tasks = ScheduledTasks::createForSchedule()
             ->uniqueTasks()
-            ->reject(fn (Task $task) => $task->isBeingMonitored());
+            ->reject(function (Task $task) {
+                return $task->isBeingMonitored();
+            });
 
         if ($tasks->isEmpty()) {
             return;
@@ -26,7 +28,9 @@ class ReadyForMonitoringTasksTable extends ScheduledTasksTable
 
         $tasks = ScheduledTasks::createForSchedule()
             ->uniqueTasks()
-            ->reject(fn (Task $task) => $task->isBeingMonitored());
+            ->reject(function (Task $task) {
+                return $task->isBeingMonitored();
+            });
 
         $headers = ['Name', 'Type', 'Frequency'];
         $rows = $tasks->map(function (Task $task) {

@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Bus;
 use Spatie\ScheduleMonitor\Commands\SyncCommand;
-use Spatie\ScheduleMonitor\Jobs\PingOhDearJob;
 use Spatie\ScheduleMonitor\Models\MonitoredScheduledTask;
 use Spatie\ScheduleMonitor\Models\MonitoredScheduledTaskLogItem;
 use Spatie\ScheduleMonitor\Tests\TestCase;
@@ -23,7 +22,9 @@ class ScheduledTaskSubscriberTest extends TestCase
         Bus::fake();
 
         TestKernel::registerScheduledTasks(function (Schedule $schedule) {
-            $schedule->call(fn () => 1 + 1)->everyMinute()->monitorName('dummy-task');
+            $schedule->call(function () {
+                return 1 + 1;
+            })->everyMinute()->monitorName('dummy-task');
         });
     }
 
@@ -32,12 +33,6 @@ class ScheduledTaskSubscriberTest extends TestCase
     {
         $this->artisan(SyncCommand::class)->assertExitCode(0);
         $this->artisan('schedule:run')->assertExitCode(0);
-
-        Bus::assertDispatched(function (PingOhDearJob $job) {
-            $monitoredScheduledTask = $job->logItem->monitoredScheduledTask;
-
-            return $monitoredScheduledTask->name === 'dummy-task';
-        });
 
         $logTypes = MonitoredScheduledTask::findByName('dummy-task')->logItems->pluck('type')->toArray();
 
@@ -52,8 +47,12 @@ class ScheduledTaskSubscriberTest extends TestCase
     {
         TestKernel::replaceScheduledTasks(function (Schedule $schedule) {
             $schedule
-                ->call(fn () => TestTime::addSecond())
-                ->everyMinute()->skip(fn () => true)
+                ->call(function () {
+                    return TestTime::addSecond();
+                })
+                ->everyMinute()->skip(function () {
+                    return true;
+                })
                 ->monitorName('dummy-task');
         });
         $this->artisan(SyncCommand::class)->assertExitCode(0);
@@ -118,25 +117,17 @@ class ScheduledTaskSubscriberTest extends TestCase
     /** @test */
     public function it_will_not_fire_a_job_when_a_scheduled_task_finished_that_is_not_monitored()
     {
-        // running the schedule without syncing to oh dear
+        // running the schedule
         $this->artisan('schedule:run')->assertExitCode(0);
-
-        Bus::assertNotDispatched(PingOhDearJob::class);
     }
 
     /** @test */
-    public function it_can_use_a_specific_queue_to_ping_oh_dear()
+    public function it_can_use_a_specific_queue()
     {
         Bus::fake();
 
-        config()->set('schedule-monitor.oh_dear.queue', 'custom-queue');
-
         $this->artisan(SyncCommand::class)->assertExitCode(0);
         $this->artisan('schedule:run')->assertExitCode(0);
-
-        Bus::assertDispatched(function (PingOhDearJob $job) {
-            return $job->queue === 'custom-queue';
-        });
     }
 
     /** @test */
@@ -145,12 +136,12 @@ class ScheduledTaskSubscriberTest extends TestCase
         Bus::fake();
 
         TestKernel::registerScheduledTasks(function (Schedule $schedule) {
-            $schedule->call(fn () => 1 + 1)->everyMinute()->runInBackground();
+            $schedule->call(function () {
+                return 1 + 1;
+            })->everyMinute()->runInBackground();
         });
 
         $this->artisan(SyncCommand::class)->assertExitCode(0);
         $this->artisan('schedule:run')->assertExitCode(0);
-
-        Bus::assertDispatched(PingOhDearJob::class);
     }
 }

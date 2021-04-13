@@ -2,7 +2,6 @@
 
 namespace Spatie\ScheduleMonitor\Commands\Tables;
 
-use OhDear\PhpSdk\OhDear;
 use Spatie\ScheduleMonitor\Support\ScheduledTasks\ScheduledTasks;
 use Spatie\ScheduleMonitor\Support\ScheduledTasks\Tasks\Task;
 
@@ -16,7 +15,9 @@ class MonitoredTasksTable extends ScheduledTasksTable
 
         $tasks = ScheduledTasks::createForSchedule()
             ->uniqueTasks()
-            ->filter(fn (Task $task) => $task->isBeingMonitored());
+            ->filter(function (Task $task) {
+                return $task->isBeingMonitored();
+            });
 
         if ($tasks->isEmpty()) {
             $this->command->line('');
@@ -36,12 +37,6 @@ class MonitoredTasksTable extends ScheduledTasksTable
             'Grace time',
         ];
 
-        if ($this->usingOhDear()) {
-            $headers = array_merge($headers, [
-                'Registered at Oh Dear',
-            ]);
-        }
-
         $dateFormat = config('schedule-monitor.date_format');
 
         $rows = $tasks->map(function (Task $task) use ($dateFormat) {
@@ -56,24 +51,10 @@ class MonitoredTasksTable extends ScheduledTasksTable
                 'grace_time' => $task->graceTimeInMinutes(),
             ];
 
-            if ($this->usingOhDear()) {
-                $row = array_merge($row, [
-                    'registered_at_oh_dear' => $task->isBeingMonitoredAtOhDear() ? '✅' : '❌',
-                ]);
-            }
-
             return $row;
         });
 
         $this->command->table($headers, $rows);
-
-        if ($this->usingOhDear()) {
-            if ($tasks->contains(fn (Task $task) => ! $task->isBeingMonitoredAtOhDear())) {
-                $this->command->line('');
-                $this->command->line('Some tasks are not registered on Oh Dear. You will not be notified when they do not run on time.');
-                $this->command->line('Run `php artisan schedule-monitor:sync` to register them and receive notifications.');
-            }
-        }
     }
 
     public function getLastRunFinishedAt(Task $task)
@@ -104,22 +85,5 @@ class MonitoredTasksTable extends ScheduledTasksTable
         }
 
         return $formattedLastFailedAt;
-    }
-
-    protected function usingOhDear(): bool
-    {
-        if (! class_exists(OhDear::class)) {
-            return false;
-        }
-
-        if (empty(config('schedule-monitor.oh_dear.api_token'))) {
-            return false;
-        }
-
-        if (empty(config('schedule-monitor.oh_dear.site_id'))) {
-            return false;
-        }
-
-        return true;
     }
 }

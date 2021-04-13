@@ -6,7 +6,8 @@ use Illuminate\Console\Command;
 
 abstract class ScheduledTasksTable
 {
-    protected Command $command;
+    /** @var Command */
+    protected $command;
 
     public function __construct(Command $command)
     {

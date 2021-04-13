@@ -20,6 +20,5 @@ $factory->define(MonitoredScheduledTaskLogItem::class, function (Generator $fake
 
 $factory->afterMaking(MonitoredScheduledTaskLogItem::class, function (MonitoredScheduledTaskLogItem $model) {
     $scheduledTask = $model->monitoredScheduledTask;
-    $scheduledTask->ping_url = 'https://ping.ohdear.app';
     $scheduledTask->save();
 });

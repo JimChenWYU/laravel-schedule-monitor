@@ -17,7 +17,9 @@ class BackgroundCommandListener
         }
 
         collect(app(Schedule::class)->events())
-            ->filter(fn (Event $task) => $task->runInBackground)
+            ->filter(function (Event $task) {
+                return $task->runInBackground;
+            })
             ->each(function (Event $task) {
                 $task
                     ->then(

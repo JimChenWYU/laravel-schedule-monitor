@@ -9,9 +9,15 @@ use Spatie\ScheduleMonitor\Support\ScheduledTasks\Tasks\Task;
 
 class ScheduledTasks
 {
-    protected Schedule $schedule;
+    /**
+     * @var Schedule
+     */
+    protected $schedule;
 
-    protected Collection $tasks;
+    /**
+     * @var Collection
+     */
+    protected $tasks;
 
     public static function createForSchedule()
     {
@@ -26,41 +32,61 @@ class ScheduledTasks
 
         $this->tasks = collect($this->schedule->events())
             ->map(
-                fn (Event $event): Task => ScheduledTaskFactory::createForEvent($event)
+                function (Event $event): Task {
+                    return ScheduledTaskFactory::createForEvent($event);
+                }
             );
     }
 
     public function uniqueTasks(): Collection
     {
         return $this->tasks
-            ->filter(fn (Task $task) => $task->shouldMonitor())
-            ->reject(fn (Task $task) => empty($task->name()))
-            ->unique(fn (Task $task) => $task->name())
+            ->filter(function (Task $task) {
+                return $task->shouldMonitor();
+            })
+            ->reject(function (Task $task) {
+                return empty($task->name());
+            })
+            ->unique(function (Task $task) {
+                return $task->name();
+            })
             ->values();
     }
 
     public function duplicateTasks(): Collection
     {
         $uniqueTasksIds = $this->uniqueTasks()
-            ->map(fn (Task $task) => $task->uniqueId())
+            ->map(function (Task $task) {
+                return $task->uniqueId();
+            })
             ->toArray();
 
         return $this->tasks
-            ->filter(fn (Task $task) => $task->shouldMonitor())
-            ->reject(fn (Task $task) => empty($task->name()))
-            ->reject(fn (Task $task) => in_array($task->uniqueId(), $uniqueTasksIds))
+            ->filter(function (Task $task) {
+                return $task->shouldMonitor();
+            })
+            ->reject(function (Task $task) {
+                return empty($task->name());
+            })
+            ->reject(function (Task $task) use ($uniqueTasksIds) {
+                return in_array($task->uniqueId(), $uniqueTasksIds);
+            })
             ->values();
     }
 
     public function unmonitoredTasks(): Collection
     {
-        return $this->tasks->reject(fn (Task $task) => $task->shouldMonitor());
+        return $this->tasks->reject(function (Task $task) {
+            return $task->shouldMonitor();
+        });
     }
 
     public function unnamedTasks(): Collection
     {
         return $this->tasks
-            ->filter(fn (Task $task) => empty($task->name()))
+            ->filter(function (Task $task) {
+                return empty($task->name());
+            })
             ->values();
     }
 }

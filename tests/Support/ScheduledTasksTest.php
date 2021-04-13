@@ -15,14 +15,18 @@ class ScheduledTasksTest extends TestCase
     {
         TestKernel::registerScheduledTasks(function (Schedule $schedule) {
             $schedule->command('dummy')->everyMinute();
-            $schedule->call(fn () => 1 + 1)->hourly()->monitorName('dummy');
+            $schedule->call(function () {
+                return 1 + 1;
+            })->hourly()->monitorName('dummy');
             $schedule->command('other-dummy')->everyMinute();
         });
 
         $scheduledTasks = ScheduledTasks::createForSchedule();
 
         $uniqueTasks = $scheduledTasks->uniqueTasks()
-            ->map(fn (Task $task) => "{$task->name()}-{$task->type()}")
+            ->map(function (Task $task) {
+                return "{$task->name()}-{$task->type()}";
+            })
             ->toArray();
 
         $this->assertEquals([
@@ -31,7 +35,9 @@ class ScheduledTasksTest extends TestCase
         ], $uniqueTasks);
 
         $duplicateTasks = $scheduledTasks->duplicateTasks()
-            ->map(fn (Task $task) => "{$task->name()}-{$task->type()}")
+            ->map(function (Task $task) {
+                return "{$task->name()}-{$task->type()}";
+            })
             ->toArray();
 
         $this->assertEquals([

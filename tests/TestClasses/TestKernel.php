@@ -8,7 +8,8 @@ use Orchestra\Testbench\Console\Kernel;
 
 class TestKernel extends Kernel
 {
-    protected static array $registeredScheduleCommands = [];
+    /** @var array  */
+    protected static $registeredScheduleCommands = [];
 
     public function commands()
     {
@@ -20,7 +21,9 @@ class TestKernel extends Kernel
     public function schedule(Schedule $schedule)
     {
         collect(static::$registeredScheduleCommands)->each(
-            fn (Closure $closure) => $closure($schedule)
+            function (Closure $closure) use ($schedule) {
+                return $closure($schedule);
+            }
         );
     }
 

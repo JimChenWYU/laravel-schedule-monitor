@@ -4,8 +4,6 @@ namespace Spatie\ScheduleMonitor\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use OhDear\PhpSdk\OhDear;
-use OhDear\PhpSdk\Resources\CronCheck;
 use Spatie\ScheduleMonitor\Models\MonitoredScheduledTask;
 use Spatie\ScheduleMonitor\Support\ScheduledTasks\ScheduledTasks;
 use Spatie\ScheduleMonitor\Support\ScheduledTasks\Tasks\Task;
@@ -21,8 +19,7 @@ class SyncCommand extends Command
         $this->info('Start syncing schedule...' . PHP_EOL);
 
         $this
-            ->syncScheduledTasksWithDatabase()
-            ->syncMonitoredScheduledTaskWithOhDear();
+            ->syncScheduledTasksWithDatabase();
 
         $monitoredScheduledTasksCount = MonitoredScheduledTask::count();
         $this->info('');
@@ -52,55 +49,6 @@ class SyncCommand extends Command
         MonitoredScheduledTask::query()
             ->whereNotIn('id', $monitoredScheduledTasks->pluck('id'))
             ->delete();
-
-        return $this;
-    }
-
-    protected function syncMonitoredScheduledTaskWithOhDear(): self
-    {
-        if (! class_exists(OhDear::class)) {
-            return $this;
-        }
-
-        $siteId = config('schedule-monitor.oh_dear.site_id');
-
-        if (! $siteId) {
-            $this->warn('Not syncing schedule with Oh Dear because not `site_id` is not set in the `oh-dear` config file. Learn how to set this up at https://ohdear.app/TODO-add-link.');
-
-            return $this;
-        }
-
-        $this->comment('Start syncing schedule with Oh Dear...');
-
-        $monitoredScheduledTasks = MonitoredScheduledTask::get();
-
-        $cronChecks = $monitoredScheduledTasks
-            ->map(function (MonitoredScheduledTask $monitoredScheduledTask) {
-                return [
-                    'name' => $monitoredScheduledTask->name,
-                    'type' => 'cron',
-                    'cron_expression' => $monitoredScheduledTask->cron_expression,
-                    'grace_time_in_minutes' => $monitoredScheduledTask->grace_time_in_minutes,
-                    'server_timezone' => $monitoredScheduledTask->timezone,
-                    'description' => '',
-                ];
-            })
-            ->toArray();
-
-        $cronChecks = app(OhDear::class)->site($siteId)->syncCronChecks($cronChecks);
-        $this->comment('Successfully synced schedule with Oh Dear!');
-
-        collect($cronChecks)
-            ->each(
-                function (CronCheck $cronCheck) {
-                    if (! $monitoredScheduledTask = MonitoredScheduledTask::findForCronCheck($cronCheck)) {
-                        return;
-                    }
-
-                    $monitoredScheduledTask->update(['ping_url' => $cronCheck->pingUrl]);
-                    $monitoredScheduledTask->markAsRegisteredOnOhDear();
-                }
-            );
 
         return $this;
     }

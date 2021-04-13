@@ -23,12 +23,14 @@ class SyncCommandTest extends TestCase
     }
 
     /** @test */
-    public function it_can_sync_the_schedule_with_the_db_and_oh_dear()
+    public function it_can_sync_the_schedule_with_the_db()
     {
         TestKernel::registerScheduledTasks(function (Schedule $schedule) {
             $schedule->command('dummy')->everyMinute();
             $schedule->exec('execute')->everyFifteenMinutes();
-            $schedule->call(fn () => 1 + 1)->hourly()->monitorName('my-closure');
+            $schedule->call(function () {
+                return 1 + 1;
+            })->hourly()->monitorName('my-closure');
             $schedule->job(new TestJob())->daily()->timezone('Asia/Kolkata');
         });
 
@@ -41,8 +43,6 @@ class SyncCommandTest extends TestCase
             'name' => 'dummy',
             'type' => 'command',
             'cron_expression' => '* * * * *',
-            'ping_url' => 'https://ping.ohdear.app/test-ping-url-dummy',
-            'registered_on_oh_dear_at' => now()->format('Y-m-d H:i:s'),
             'grace_time_in_minutes' => 5,
             'last_pinged_at' => null,
             'last_started_at' => null,
@@ -54,8 +54,6 @@ class SyncCommandTest extends TestCase
             'name' => 'execute',
             'type' => 'shell',
             'cron_expression' => '*/15 * * * *',
-            'ping_url' => 'https://ping.ohdear.app/test-ping-url-execute',
-            'registered_on_oh_dear_at' => now()->format('Y-m-d H:i:s'),
             'grace_time_in_minutes' => 5,
             'last_pinged_at' => null,
             'last_started_at' => null,
@@ -67,8 +65,6 @@ class SyncCommandTest extends TestCase
             'name' => 'my-closure',
             'type' => 'closure',
             'cron_expression' => '0 * * * *',
-            'ping_url' => 'https://ping.ohdear.app/test-ping-url-my-closure',
-            'registered_on_oh_dear_at' => now()->format('Y-m-d H:i:s'),
             'grace_time_in_minutes' => 5,
             'last_pinged_at' => null,
             'last_started_at' => null,
@@ -80,8 +76,6 @@ class SyncCommandTest extends TestCase
             'name' => TestJob::class,
             'type' => 'job',
             'cron_expression' => '0 0 * * *',
-            'ping_url' => 'https://ping.ohdear.app/test-ping-url-' . urlencode(TestJob::class),
-            'registered_on_oh_dear_at' => now()->format('Y-m-d H:i:s'),
             'grace_time_in_minutes' => 5,
             'last_pinged_at' => null,
             'last_started_at' => null,
@@ -96,7 +90,9 @@ class SyncCommandTest extends TestCase
     public function it_will_not_monitor_commands_without_a_name()
     {
         TestKernel::registerScheduledTasks(function (Schedule $schedule) {
-            $schedule->call(fn () => 'a closure has no name')->hourly();
+            $schedule->call(function () {
+                return 'a closure has no name';
+            })->hourly();
         });
 
         $this->artisan(SyncCommand::class);
@@ -185,18 +181,5 @@ class SyncCommandTest extends TestCase
 
         $this->assertCount(1, MonitoredScheduledTask::get());
         $this->assertEquals('0 0 * * *', $monitoredScheduledTask->refresh()->cron_expression);
-    }
-
-    /** @test */
-    public function it_will_not_sync_with_oh_dear_when_no_site_id_is_set()
-    {
-        config()->set('schedule-monitor.oh_dear.site_id', null);
-
-        TestKernel::registerScheduledTasks(function (Schedule $schedule) {
-            $schedule->command('dummy')->daily();
-        });
-        $this->artisan(SyncCommand::class);
-        $this->assertCount(1, MonitoredScheduledTask::get());
-        $this->assertEquals([], $this->ohDear->getSyncedCronCheckAttributes());
     }
 }

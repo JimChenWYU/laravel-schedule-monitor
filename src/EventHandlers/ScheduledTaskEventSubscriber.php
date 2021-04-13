@@ -15,22 +15,32 @@ class ScheduledTaskEventSubscriber
     {
         $events->listen(
             ScheduledTaskStarting::class,
-            fn (ScheduledTaskStarting $event) => optional(MonitoredScheduledTask::findForTask($event->task))->markAsStarting($event)
+            function (ScheduledTaskStarting $event) {
+                return optional(MonitoredScheduledTask::findForTask($event->task))->markAsStarting($event);
+            }
         );
 
         $events->listen(
             ScheduledTaskFinished::class,
-            fn (ScheduledTaskFinished $event) => optional(MonitoredScheduledTask::findForTask($event->task))->markAsFinished($event)
+            function (ScheduledTaskFinished $event) {
+                return optional(MonitoredScheduledTask::findForTask($event->task))->markAsFinished($event);
+            }
         );
 
-        $events->listen(
-            ScheduledTaskFailed::class,
-            fn (ScheduledTaskFailed $event) => optional(MonitoredScheduledTask::findForTask($event->task))->markAsFailed($event)
-        );
+        if (class_exists('Illuminate\Console\Events\ScheduledTaskFailed')) {
+            $events->listen(
+                ScheduledTaskFailed::class,
+                function (ScheduledTaskFailed $event) {
+                    return optional(MonitoredScheduledTask::findForTask($event->task))->markAsFailed($event);
+                }
+            );
+        }
 
         $events->listen(
             ScheduledTaskSkipped::class,
-            fn (ScheduledTaskSkipped $event) => optional(MonitoredScheduledTask::findForTask($event->task))->markAsSkipped($event)
+            function (ScheduledTaskSkipped $event) {
+                return optional(MonitoredScheduledTask::findForTask($event->task))->markAsSkipped($event);
+            }
         );
     }
 }

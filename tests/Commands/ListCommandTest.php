@@ -16,7 +16,9 @@ class ListCommandTest extends TestCase
         TestKernel::registerScheduledTasks(function (Schedule $schedule) {
             $schedule->command('dummy')->everyMinute();
             $schedule->exec('execute')->everyFifteenMinutes();
-            $schedule->call(fn () => 1 + 1)->hourly();
+            $schedule->call(function () {
+                return 1 + 1;
+            })->hourly();
             $schedule->job(new TestJob())->daily();
             $schedule->job(new TestJob())->daily();
         });

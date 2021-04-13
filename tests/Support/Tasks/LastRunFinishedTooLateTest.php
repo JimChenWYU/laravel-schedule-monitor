@@ -12,9 +12,11 @@ use Spatie\TestTime\TestTime;
 
 class LastRunFinishedTooLateTest extends TestCase
 {
-    private Event $event;
+    /** @var Event  */
+    private $event;
 
-    private MonitoredScheduledTask $monitoredScheduledTask;
+    /** @var MonitoredScheduledTask */
+    private $monitoredScheduledTask;
 
     public function setUp(): void
     {

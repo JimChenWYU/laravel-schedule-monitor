@@ -13,11 +13,20 @@ use Spatie\ScheduleMonitor\Models\MonitoredScheduledTask;
 
 abstract class Task
 {
-    protected Event $event;
+    /**
+     * @var Event
+     */
+    protected $event;
 
-    protected string $uniqueId;
+    /**
+     * @var string
+     */
+    protected $uniqueId;
 
-    protected ?MonitoredScheduledTask $monitoredScheduledTask = null;
+    /**
+     * @var MonitoredScheduledTask|null
+     */
+    protected $monitoredScheduledTask = null;
 
     abstract public static function canHandleEvent(Event $event): bool;
 
@@ -58,15 +67,6 @@ abstract class Task
     public function isBeingMonitored(): bool
     {
         return ! is_null($this->monitoredScheduledTask);
-    }
-
-    public function isBeingMonitoredAtOhDear(): bool
-    {
-        if (! $this->isBeingMonitored()) {
-            return false;
-        }
-
-        return ! empty($this->monitoredScheduledTask->ping_url);
     }
 
     public function previousRunAt(): CarbonInterface

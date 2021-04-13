@@ -6,11 +6,9 @@ use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Console\Scheduling\Event as SchedulerEvent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
-use OhDear\PhpSdk\OhDear;
 use Spatie\ScheduleMonitor\Commands\CleanLogCommand;
 use Spatie\ScheduleMonitor\Commands\ListCommand;
 use Spatie\ScheduleMonitor\Commands\SyncCommand;
-use Spatie\ScheduleMonitor\Commands\VerifyCommand;
 use Spatie\ScheduleMonitor\EventHandlers\BackgroundCommandListener;
 use Spatie\ScheduleMonitor\EventHandlers\ScheduledTaskEventSubscriber;
 
@@ -53,8 +51,7 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
         $this->commands([
             CleanLogCommand::class,
             ListCommand::class,
-            SyncCommand::class,
-            VerifyCommand::class,
+            SyncCommand::class
         ]);
 
         return $this;
@@ -62,16 +59,7 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
 
     protected function configureOhDearApi(): self
     {
-        if (! class_exists(OhDear::class)) {
-            return $this;
-        }
-
-        $this->app->bind(OhDear::class, function () {
-            $apiToken = config('schedule-monitor.oh_dear.api_token');
-
-            return new OhDear($apiToken, 'https://ohdear.app/api/');
-        });
-
+        // remove OhDear
         return $this;
     }
 
