@@ -18,6 +18,8 @@ Fork from [spatie/laravel-schedule-monitor](https://github.com/spatie/laravel-sc
 
 If you use **Laravel 8**, suggest you use [spatie/laravel-schedule-monitor](https://github.com/spatie/laravel-schedule-monitor) directly
 
+:heavy_exclamation_mark: Remove [Oh Dear](https://ohdear.app)
+
 :heavy_exclamation_mark: If you have any questions, please go to [spatie/laravel-schedule-monitor](https://github.com/spatie/laravel-schedule-monitor/issues)
 
 ## License
