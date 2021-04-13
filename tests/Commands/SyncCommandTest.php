@@ -82,8 +82,6 @@ class SyncCommandTest extends TestCase
             'last_finished_at' => null,
             'timezone' => 'Asia/Kolkata',
         ]);
-
-        $this->assertMatchesSnapshot($this->ohDear->getSyncedCronCheckAttributes());
     }
 
     /** @test */
@@ -99,8 +97,6 @@ class SyncCommandTest extends TestCase
 
         $monitoredScheduledTasks = MonitoredScheduledTask::get();
         $this->assertCount(0, $monitoredScheduledTasks);
-
-        $this->assertEquals([], $this->ohDear->getSyncedCronCheckAttributes());
     }
 
     /** @test **/
@@ -132,10 +128,6 @@ class SyncCommandTest extends TestCase
         $this->assertDatabaseHas('monitored_scheduled_tasks', [
             'grace_time_in_minutes' => 15,
         ]);
-
-        $syncedCronChecks = $this->ohDear->getSyncedCronCheckAttributes();
-
-        $this->assertEquals(15, $syncedCronChecks[0]['grace_time_in_minutes']);
     }
 
     /** @test */
@@ -148,8 +140,6 @@ class SyncCommandTest extends TestCase
         $this->artisan(SyncCommand::class);
 
         $this->assertCount(0, MonitoredScheduledTask::get());
-
-        $this->assertEquals([], $this->ohDear->getSyncedCronCheckAttributes());
     }
 
     /** @test */
