@@ -1,5 +1,5 @@
 {
-    "name": "spatie/laravel-schedule-monitor",
+    "name": "jimchen/laravel-schedule-monitor",
     "description": "Monitor scheduled tasks in a Laravel app",
     "keywords": [
         "spatie",
