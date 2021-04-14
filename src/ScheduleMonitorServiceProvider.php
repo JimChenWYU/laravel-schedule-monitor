@@ -60,7 +60,8 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
         if ($this->shouldPolyfill()) {
             class_alias(
                 ScheduledTaskFailed::class,
-                'Illuminate\Console\Events\ScheduledTaskFailed');
+                'Illuminate\Console\Events\ScheduledTaskFailed'
+            );
             $this->app['events']->listen(ArtisanStarting::class, function () {
                 $this->commands([
                     ScheduleRunCommand::class,
@@ -73,7 +74,7 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
 
     protected function shouldPolyfill(): bool
     {
-        return !class_exists('Illuminate\Console\Events\ScheduledTaskFailed');
+        return ! class_exists('Illuminate\Console\Events\ScheduledTaskFailed');
     }
 
     protected function configureOhDearApi(): self
