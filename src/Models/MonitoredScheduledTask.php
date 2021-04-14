@@ -102,12 +102,10 @@ class MonitoredScheduledTask extends Model
     {
         $logItem = $this->createLogItem(MonitoredScheduledTaskLogItem::TYPE_FAILED);
 
-        if (class_exists('Illuminate\Console\Events\ScheduledTaskFailed')) {
-            if ($event instanceof ScheduledTaskFailed) {
-                $logItem->updateMeta([
-                    'failure_message' => Str::limit(optional($event->exception)->getMessage(), 255),
-                ]);
-            }
+        if ($event instanceof ScheduledTaskFailed) {
+            $logItem->updateMeta([
+                'failure_message' => Str::limit(optional($event->exception)->getMessage(), 255),
+            ]);
         }
 
         if ($event instanceof ScheduledTaskFinished) {

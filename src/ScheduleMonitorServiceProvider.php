@@ -2,6 +2,7 @@
 
 namespace Spatie\ScheduleMonitor;
 
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Console\Scheduling\Event as SchedulerEvent;
 use Illuminate\Support\Facades\Event;
@@ -11,6 +12,8 @@ use Spatie\ScheduleMonitor\Commands\ListCommand;
 use Spatie\ScheduleMonitor\Commands\SyncCommand;
 use Spatie\ScheduleMonitor\EventHandlers\BackgroundCommandListener;
 use Spatie\ScheduleMonitor\EventHandlers\ScheduledTaskEventSubscriber;
+use Spatie\ScheduleMonitor\Polyfill\ScheduledTaskFailed;
+use Spatie\ScheduleMonitor\Polyfill\ScheduleRunCommand;
 
 class ScheduleMonitorServiceProvider extends ServiceProvider
 {
@@ -54,7 +57,23 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
             SyncCommand::class,
         ]);
 
+        if ($this->shouldPolyfill()) {
+            class_alias(
+                ScheduledTaskFailed::class,
+                'Illuminate\Console\Events\ScheduledTaskFailed');
+            $this->app['events']->listen(ArtisanStarting::class, function () {
+                $this->commands([
+                    ScheduleRunCommand::class,
+                ]);
+            });
+        }
+
         return $this;
+    }
+
+    protected function shouldPolyfill(): bool
+    {
+        return !class_exists('Illuminate\Console\Events\ScheduledTaskFailed');
     }
 
     protected function configureOhDearApi(): self

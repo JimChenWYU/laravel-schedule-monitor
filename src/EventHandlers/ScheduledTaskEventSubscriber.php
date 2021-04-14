@@ -27,14 +27,12 @@ class ScheduledTaskEventSubscriber
             }
         );
 
-        if (class_exists('Illuminate\Console\Events\ScheduledTaskFailed')) {
-            $events->listen(
-                ScheduledTaskFailed::class,
-                function (ScheduledTaskFailed $event) {
-                    return optional(MonitoredScheduledTask::findForTask($event->task))->markAsFailed($event);
-                }
-            );
-        }
+        $events->listen(
+            ScheduledTaskFailed::class,
+            function (ScheduledTaskFailed $event) {
+                return optional(MonitoredScheduledTask::findForTask($event->task))->markAsFailed($event);
+            }
+        );
 
         $events->listen(
             ScheduledTaskSkipped::class,
