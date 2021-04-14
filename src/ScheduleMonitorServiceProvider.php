@@ -62,7 +62,8 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
                 ScheduledTaskFailed::class,
                 'Illuminate\Console\Events\ScheduledTaskFailed'
             );
-            $this->app['events']->listen(ArtisanStarting::class, function () {
+            // pass psalm
+            $this->app->get('events')->listen(ArtisanStarting::class, function () {
                 $this->commands([
                     ScheduleRunCommand::class,
                 ]);
