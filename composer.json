@@ -32,7 +32,10 @@
     "autoload": {
         "psr-4": {
             "Spatie\\ScheduleMonitor\\": "src"
-        }
+        },
+        "files": [
+            "src/Polyfill/bootstrap.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

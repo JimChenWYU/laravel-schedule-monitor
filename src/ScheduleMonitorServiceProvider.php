@@ -12,7 +12,6 @@ use Spatie\ScheduleMonitor\Commands\ListCommand;
 use Spatie\ScheduleMonitor\Commands\SyncCommand;
 use Spatie\ScheduleMonitor\EventHandlers\BackgroundCommandListener;
 use Spatie\ScheduleMonitor\EventHandlers\ScheduledTaskEventSubscriber;
-use Spatie\ScheduleMonitor\Polyfill\ScheduledTaskFailed;
 use Spatie\ScheduleMonitor\Polyfill\ScheduleRunCommand;
 
 class ScheduleMonitorServiceProvider extends ServiceProvider
@@ -58,10 +57,6 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
         ]);
 
         if ($this->shouldPolyfill()) {
-            class_alias(
-                ScheduledTaskFailed::class,
-                'Illuminate\Console\Events\ScheduledTaskFailed'
-            );
             // pass psalm
             $this->app->get('events')->listen(ArtisanStarting::class, function () {
                 $this->commands([
@@ -75,7 +70,7 @@ class ScheduleMonitorServiceProvider extends ServiceProvider
 
     protected function shouldPolyfill(): bool
     {
-        return ! class_exists('Illuminate\Console\Events\ScheduledTaskFailed');
+        return version_compare($this->app->version(), '7.19.0') < 0;
     }
 
     protected function configureOhDearApi(): self

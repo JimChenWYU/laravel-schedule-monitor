@@ -69,30 +69,27 @@ class ScheduledTaskSubscriberTest extends TestCase
     /** @test */
     public function it_will_log_failures_of_scheduled_tasks()
     {
-        // >= L7
-        if (class_exists('Illuminate\Console\Events\ScheduledTaskFailed')) {
-            TestKernel::replaceScheduledTasks(function (Schedule $schedule) {
-                $schedule
-                    ->call(function () {
-                        throw new Exception("exception");
-                    })
-                    ->everyMinute()
-                    ->monitorName('failing-task');
-            });
+        TestKernel::replaceScheduledTasks(function (Schedule $schedule) {
+            $schedule
+                ->call(function () {
+                    throw new Exception("exception");
+                })
+                ->everyMinute()
+                ->monitorName('failing-task');
+        });
 
-            $this->artisan(SyncCommand::class)->assertExitCode(0);
-            $this->artisan('schedule:run')->assertExitCode(0);
+        $this->artisan(SyncCommand::class)->assertExitCode(0);
+        $this->artisan('schedule:run')->assertExitCode(0);
 
-            $logTypes = MonitoredScheduledTask::findByName('failing-task')
-                ->logItems
-                ->pluck('type')
-                ->toArray();
+        $logTypes = MonitoredScheduledTask::findByName('failing-task')
+            ->logItems
+            ->pluck('type')
+            ->toArray();
 
-            $this->assertEquals([
-                MonitoredScheduledTaskLogItem::TYPE_FAILED,
-                MonitoredScheduledTaskLogItem::TYPE_STARTING,
-            ], $logTypes);
-        }
+        $this->assertEquals([
+            MonitoredScheduledTaskLogItem::TYPE_FAILED,
+            MonitoredScheduledTaskLogItem::TYPE_STARTING,
+        ], $logTypes);
     }
 
     /** @test */
